@@ -23,26 +23,24 @@ static void wifi_init() {
 }
 
 const int relay1 = 12;
-const int relay2 = 14;
+const int motion_sensor_gpio = 14 ;
 
 bool relay1_on = false;
-bool relay2_on = false;
+
+homekit_characteristic_t motion_detected  = HOMEKIT_CHARACTERISTIC_(MOTION_DETECTED, 0);
+homekit_characteristic_t currentAmbientLightLevel = HOMEKIT_CHARACTERISTIC_(CURRENT_AMBIENT_LIGHT_LEVEL, 0,.min_value = (float[]) {0},);
+homekit_characteristic_t name = HOMEKIT_CHARACTERISTIC_(NAME, "Sonoff Switch");
 
 
 void led_write(bool on) {
     gpio_write(relay1, on ? 0 : 1);
 }
 
-void led_write2(bool on) {
-    gpio_write(relay2, on ? 0 : 1);
-}
 
 void led_init() {
     gpio_enable(relay1, GPIO_OUTPUT);
-	gpio_enable(relay2, GPIO_INPUT);
 
     led_write(relay1_on);
-    led_write2(relay2_on);
 }
 
 
@@ -75,18 +73,6 @@ homekit_value_t relay1_on_get() {
     return HOMEKIT_BOOL(relay1_on);
 }
 
-homekit_value_t relay2_on_get() {
-    return HOMEKIT_BOOL(relay2_on);
-}
-
-homekit_value_t relay3_on_get() {
-    return HOMEKIT_BOOL(relay3_on);
-}
-
-homekit_value_t relay4_on_get() {
-    return HOMEKIT_BOOL(relay4_on);
-}
-
 void relay1_on_set(homekit_value_t value) {
     if (value.format != homekit_format_bool) {
         printf("Invalid value format: %d\n", value.format);
@@ -97,35 +83,39 @@ void relay1_on_set(homekit_value_t value) {
     led_write(relay1_on);
 }
 
-void relay2_on_set(homekit_value_t value) {
-    if (value.format != homekit_format_bool) {
-        printf("Invalid value format: %d\n", value.format);
-        return;
+
+void motion_sensor_callback(uint8_t gpio) {
+
+    if (gpio == motion_sensor_gpio){
+
+		  uint16_t val = sdk_system_adc_read();
+   			//float val2 = (3.2 / 1023.0);
+			//val2 = val * val2;
+				//printf ("ADC voltage is %f\n",  val2);
+				printf ("ADC voltage is %d\n",  val);
+		//printf ("ADC voltage is %.3f\n", sdk_system_adc_read());
+		//currentAmbientLightLevel = val;
+
+		//homekit_characteristic_notify(&currentAmbientLightLevel, HOMEKIT_FLOAT(val));
+
+        int new = 0;
+        new = gpio_read(motion_sensor_gpio);
+        motion_detected.value = HOMEKIT_BOOL(new);
+
+	led_write(new);
+
+
+        homekit_characteristic_notify(&motion_detected, HOMEKIT_BOOL(new));
+        printf("Motion Detected on %d\n", gpio);
+    }
+    else {
+        printf("Interrupt on %d", gpio);
+
     }
 
-    relay2_on = value.bool_value;
-    led_write2(relay2_on);
 }
 
-void relay3_on_set(homekit_value_t value) {
-    if (value.format != homekit_format_bool) {
-        printf("Invalid value format: %d\n", value.format);
-        return;
-    }
 
-    relay3_on = value.bool_value;
-    led_write3(relay3_on);
-}
-
-void relay4_on_set(homekit_value_t value) {
-    if (value.format != homekit_format_bool) {
-        printf("Invalid value format: %d\n", value.format);
-        return;
-    }
-
-    relay4_on = value.bool_value;
-    led_write4(relay4_on);
-}
 
 homekit_accessory_t *accessories[] = {
     HOMEKIT_ACCESSORY(.id=1, .category=homekit_accessory_category_switch, .services=(homekit_service_t*[]){
@@ -144,33 +134,6 @@ homekit_accessory_t *accessories[] = {
                 ON, false,
                 .getter=relay1_on_get,
                 .setter=relay1_on_set
-            ),
-            NULL
-        }),
-		HOMEKIT_SERVICE(SWITCH, .primary=true, .characteristics=(homekit_characteristic_t*[]){
-            HOMEKIT_CHARACTERISTIC(NAME, "Relay2"),
-            HOMEKIT_CHARACTERISTIC(
-                ON, false,
-                .getter=relay2_on_get,
-                .setter=relay2_on_set
-            ),
-            NULL
-        }),
-			HOMEKIT_SERVICE(SWITCH, .primary=true, .characteristics=(homekit_characteristic_t*[]){
-            HOMEKIT_CHARACTERISTIC(NAME, "Relay3"),
-            HOMEKIT_CHARACTERISTIC(
-                ON, false,
-                .getter=relay3_on_get,
-                .setter=relay3_on_set
-            ),
-            NULL
-        }),
-			HOMEKIT_SERVICE(SWITCH, .primary=true, .characteristics=(homekit_characteristic_t*[]){
-            HOMEKIT_CHARACTERISTIC(NAME, "Relay4"),
-            HOMEKIT_CHARACTERISTIC(
-                ON, false,
-                .getter=relay4_on_get,
-                .setter=relay4_on_set
             ),
             NULL
         }),
