@@ -144,10 +144,10 @@ homekit_accessory_t *accessories[] = {
     HOMEKIT_ACCESSORY(.id=1, .category=homekit_accessory_category_switch, .services=(homekit_service_t*[]){
         HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics=(homekit_characteristic_t*[]){
             HOMEKIT_CHARACTERISTIC(NAME, "Relay_4CH"),
-            HOMEKIT_CHARACTERISTIC(MANUFACTURER, "ReD"),
+            HOMEKIT_CHARACTERISTIC(MANUFACTURER, "ReD from Alex_Khmelenko"),
             HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "037A2BABF19D"),
             HOMEKIT_CHARACTERISTIC(MODEL, "Relay_4CH"),
-            HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.1"),
+            HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.2"),
             HOMEKIT_CHARACTERISTIC(IDENTIFY, led_identify),
             NULL
         }),
