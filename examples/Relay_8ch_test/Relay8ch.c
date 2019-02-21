@@ -304,14 +304,17 @@ NULL
 };
 
 homekit_server_config_t config = {
-.accessories = accessories,
-.password = "111-11-111"
+    .accessories = accessories,
+    .password = "111-11-111"
 };
 
-void user_init(void) {
-uart_set_baud(0, 115200);
+void on_wifi_ready() {
+    homekit_server_init(&config);
+}
 
-wifi_config_init("Relay_8CH", NULL, on_wifi_ready);
-led_init();
-homekit_server_init(&config);
+void user_init(void) {
+    uart_set_baud(0, 115200);
+
+    wifi_config_init("Relay_8CH", NULL, on_wifi_ready);
+    led_init();
 }
