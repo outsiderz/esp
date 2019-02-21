@@ -10,18 +10,6 @@
 #include <homekit/characteristics.h>
 #include <wifi_config.h>
 
-
-static void wifi_init() {
-    struct sdk_station_config wifi_config = {
-        .ssid = WIFI_SSID,
-        .password = WIFI_PASSWORD,
-    };
-
-    sdk_wifi_set_opmode(STATION_MODE);
-    sdk_wifi_station_set_config(&wifi_config);
-    sdk_wifi_station_connect();
-}
-
 const int relay1 = 2;
 const int relay2 = 4;
 const int relay3 = 5;
