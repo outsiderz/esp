@@ -29,15 +29,13 @@ void reset_call() {
 homekit_server_reset();
 wifi_config_reset();
 
-```
 sdk_os_timer_setfn(& device_restart_timer, device_restart, NULL);
 sdk_os_timer_arm(&device_restart_timer, 5500, 0);
-```
+
 }
 
 void motion_sensor_callback(uint8_t gpio) {
 
-```
 if (gpio == MOTION_SENSOR_GPIO){
     int new = 0;
     new = gpio_read(MOTION_SENSOR_GPIO);
@@ -48,7 +46,7 @@ if (gpio == MOTION_SENSOR_GPIO){
 else {
     printf("Interrupt on %d", gpio);
 }
-```
+
 }
 
 void gpio_init() {
@@ -74,9 +72,7 @@ HOMEKIT_ACCESSORY(
   .id=1,
   .category=homekit_accessory_category_switch,
         .services=(homekit_service_t*[]) {
-    HOMEKIT_SERVICE(
-        ACCESSORY_INFORMATION,
-        .characteristics=(homekit_characteristic_t*[]) {
+    HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics=(homekit_characteristic_t*[]) {
             HOMEKIT_CHARACTERISTIC(NAME, "sensor"),
             HOMEKIT_CHARACTERISTIC(MANUFACTURER, "Alex_Khmelenko"),
             HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "0012345"),
@@ -85,9 +81,9 @@ HOMEKIT_ACCESSORY(
             HOMEKIT_CHARACTERISTIC(IDENTIFY, identify),
             NULL
 }),
-HOMEKIT_SERVICE(MOTION_SENSOR, .primary=true, .characteristics=(homekit_characteristic_t*[]){
-HOMEKIT_CHARACTERISTIC(NAME, "Motion Sensor"),
-&motion_detected,
+            HOMEKIT_SERVICE(MOTION_SENSOR, .primary=true, .characteristics=(homekit_characteristic_t*[]){
+            HOMEKIT_CHARACTERISTIC(NAME, "Motion Sensor"),
+            &motion_detected,
 NULL
 }),
 NULL
@@ -104,13 +100,13 @@ void create_accessory_name() {
 uint8_t macaddr[6];
 sdk_wifi_get_macaddr(STATION_IF, macaddr);
 
-```
+
 char *name_value = malloc(14);
 snprintf(name_value, 14, "Homekit-%02X%02X%02X", macaddr[3], macaddr[4], macaddr[5]);
 
 name.value = HOMEKIT_STRING(name_value);
 serial.value = name.value;
-```
+
 }
 
 void on_wifi_ready() {
@@ -120,9 +116,8 @@ create_accessory_name();
 void user_init(void) {
 uart_set_baud(0, 115200);
 
-```
 wifi_config_init("ESP", NULL, on_wifi_ready);
 homekit_server_init(&config);
 gpio_init();
-```
+
 }
