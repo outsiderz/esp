@@ -70,8 +70,12 @@ homekit_characteristic_t name = HOMEKIT_CHARACTERISTIC_(NAME, "ESP8266");
 homekit_characteristic_t serial = HOMEKIT_CHARACTERISTIC_(SERIAL_NUMBER, "Sonoff N/A");
 
 homekit_accessory_t *accessories[] = {
-HOMEKIT_ACCESSORY(.id=1, .category=homekit_accessory_category_switch, .services=(homekit_service_t_[]){
-HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics=(homekit_characteristic_t*[]){
+HOMEKIT_ACCESSORY(
+  .id=1,
+  .category=homekit_accessory_category_switch,
+  .services=(homekit_service_t_[]){
+HOMEKIT_SERVICE(ACCESSORY_INFORMATION,
+  .characteristics=(homekit_characteristic_t*[]){
 &name,
 HOMEKIT_CHARACTERISTIC(MANUFACTURER, "ESP"),
 &serial,
