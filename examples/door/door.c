@@ -1,173 +1,122 @@
 #include <stdio.h>
-#include <espressif/esp_wifi.h>
-#include <espressif/esp_sta.h>
 #include <esp/uart.h>
 #include <esp8266.h>
 #include <FreeRTOS.h>
-#include <task.h>
+#include <espressif/esp_wifi.h>
+#include <espressif/esp_common.h>
+
+#include <etstimer.h>
+#include <esplibs/libmain.h>
 
 #include <homekit/homekit.h>
 #include <homekit/characteristics.h>
-#include "wifi.h"
+#include <wifi_config.h>
 
+#define MOTION_SENSOR_GPIO 14
 
-static void wifi_init() {
-    struct sdk_station_config wifi_config = {
-        .ssid = WIFI_SSID,
-        .password = WIFI_PASSWORD,
-    };
+#define DEBOUNCE_TIME 5000 / portTICK_PERIOD_MS
+#define RESET_TIME 10000
 
-    sdk_wifi_set_opmode(STATION_MODE);
-    sdk_wifi_station_set_config(&wifi_config);
-    sdk_wifi_station_connect();
+static ETSTimer device_restart_timer;
+
+homekit_characteristic_t motion_detected = HOMEKIT_CHARACTERISTIC_(MOTION_DETECTED, 0);
+
+void device_restart() {
+sdk_system_restart();
 }
 
-const int relay1 = 12;
-const int motion_sensor_gpio = 14 ;
+void reset_call() {
+homekit_server_reset();
+wifi_config_reset();
 
-bool relay1_on = false;
-
-homekit_characteristic_t motion_detected  = HOMEKIT_CHARACTERISTIC_(MOTION_DETECTED, 0);
-homekit_characteristic_t currentAmbientLightLevel = HOMEKIT_CHARACTERISTIC_(CURRENT_AMBIENT_LIGHT_LEVEL, 0,.min_value = (float[]) {0},);
-homekit_characteristic_t name = HOMEKIT_CHARACTERISTIC_(NAME, "Sonoff Switch");
-
-
-void led_write(bool on) {
-    gpio_write(relay1, on ? 0 : 1);
+```
+sdk_os_timer_setfn(&device_restart_timer, device_restart, NULL);
+sdk_os_timer_arm(&device_restart_timer, 5500, 0);
+```
 }
-
-
-void led_init() {
-    gpio_enable(relay1, GPIO_OUTPUT);
-
-    led_write(relay1_on);
-}
-
-
-void led_identify_task(void *_args) {
-    for (int i=0; i<3; i++) {
-        for (int j=0; j<2; j++) {
-            led_write(true);
-            vTaskDelay(100 / portTICK_PERIOD_MS);
-            led_write(false);
-            vTaskDelay(100 / portTICK_PERIOD_MS);
-        }
-
-        vTaskDelay(250 / portTICK_PERIOD_MS);
-    }
-
-    led_write(relay1_on);
-
-    vTaskDelete(NULL);
-}
-
-
-void led_identify(homekit_value_t _value) {
-    printf("LED identify\n");
-    xTaskCreate(led_identify_task, "LED identify", 128, NULL, 2, NULL);
-}
-
-
-
-homekit_value_t relay1_on_get() {
-    return HOMEKIT_BOOL(relay1_on);
-}
-
-void relay1_on_set(homekit_value_t value) {
-    if (value.format != homekit_format_bool) {
-        printf("Invalid value format: %d\n", value.format);
-        return;
-    }
-
-    relay1_on = value.bool_value;
-    led_write(relay1_on);
-}
-
 
 void motion_sensor_callback(uint8_t gpio) {
 
-    if (gpio == motion_sensor_gpio){
-
-		  uint16_t val = sdk_system_adc_read();
-   			//float val2 = (3.2 / 1023.0);
-			//val2 = val * val2;
-				//printf ("ADC voltage is %f\n",  val2);
-				printf ("ADC voltage is %d\n",  val);
-		//printf ("ADC voltage is %.3f\n", sdk_system_adc_read());
-		//currentAmbientLightLevel = val;
-
-		//homekit_characteristic_notify(&currentAmbientLightLevel, HOMEKIT_FLOAT(val));
-
-        int new = 0;
-        new = gpio_read(motion_sensor_gpio);
-        motion_detected.value = HOMEKIT_BOOL(new);
-
-	led_write(new);
-
-
-        homekit_characteristic_notify(&motion_detected, HOMEKIT_BOOL(new));
-        printf("Motion Detected on %d\n", gpio);
-    }
-    else {
-        printf("Interrupt on %d", gpio);
-
-    }
-
+```
+if (gpio == MOTION_SENSOR_GPIO){
+    int new = 0;
+    new = gpio_read(MOTION_SENSOR_GPIO);
+    motion_detected.value = HOMEKIT_BOOL(new);
+    homekit_characteristic_notify(&motion_detected, HOMEKIT_BOOL(new));
+    printf("Motion Detected on %d\n", gpio);
+}
+else {
+    printf("Interrupt on %d", gpio);
+}
+```
 }
 
+void gpio_init() {
+gpio_enable(MOTION_SENSOR_GPIO, GPIO_INPUT);
+gpio_set_pullup(MOTION_SENSOR_GPIO, true, true);
+gpio_set_interrupt(MOTION_SENSOR_GPIO, GPIO_INTTYPE_EDGE_ANY, motion_sensor_callback);
+}
 
+void identify_task(void *_args) {
+vTaskDelete(NULL);
+}
 
-homekit_accessory_t *accessories[] = {
-    HOMEKIT_ACCESSORY(.id=1, .category=homekit_accessory_category_switch, .services=(homekit_service_t*[]){
-        HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics=(homekit_characteristic_t*[]){
-            HOMEKIT_CHARACTERISTIC(NAME, "Relay_4CH"),
-            HOMEKIT_CHARACTERISTIC(MANUFACTURER, "ReD"),
-            HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "037A2BABF19D"),
-            HOMEKIT_CHARACTERISTIC(MODEL, "Relay_4CH"),
-            HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.1"),
-            HOMEKIT_CHARACTERISTIC(IDENTIFY, led_identify),
-            NULL
-        }),
-        HOMEKIT_SERVICE(SWITCH, .primary=true, .characteristics=(homekit_characteristic_t*[]){
-            HOMEKIT_CHARACTERISTIC(NAME, "Relay1"),
-            HOMEKIT_CHARACTERISTIC(
-                ON, false,
-                .getter=relay1_on_get,
-                .setter=relay1_on_set
-            ),
-            NULL
-        }),
-        NULL
-    }),
-    NULL
+void identify(homekit_value_t _value) {
+printf("identify\n");
+xTaskCreate(identify_task, "identify", 128, NULL, 2, NULL);
+}
+
+homekit_characteristic_t name = HOMEKIT_CHARACTERISTIC_(NAME, "ESP8266");
+homekit_characteristic_t serial = HOMEKIT_CHARACTERISTIC_(SERIAL_NUMBER, "Sonoff N/A");
+
+homekit_accessory_t _accessories[] = { HOMEKIT_ACCESSORY(.id=1, .category=homekit_accessory_category_switch, .services=(homekit_service_t_[]){
+HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics=(homekit_characteristic_t*[]){
+&name,
+HOMEKIT_CHARACTERISTIC(MANUFACTURER, "ESP"),
+&serial,
+HOMEKIT_CHARACTERISTIC(MODEL, "ESP8266"),
+HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "ZERO"),
+HOMEKIT_CHARACTERISTIC(IDENTIFY, identify),
+NULL
+}),
+HOMEKIT_SERVICE(MOTION_SENSOR, .primary=true, .characteristics=(homekit_characteristic_t*[]){
+HOMEKIT_CHARACTERISTIC(NAME, "Motion Sensor"),
+&motion_detected,
+NULL
+}),
+NULL
+}),
+NULL
 };
-HOMEKIT_ACCESSORY(.id=2, .category=homekit_accessory_category_switch, .services=(homekit_service_t*[]){
-        HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics=(homekit_characteristic_t*[]){
-            HOMEKIT_CHARACTERISTIC(NAME, "Motion Sensor"),
-            HOMEKIT_CHARACTERISTIC(MANUFACTURER, "YP"),
-            HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "0012346"),
-            HOMEKIT_CHARACTERISTIC(MODEL, "MotionSensor"),
-            HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.1"),
-            HOMEKIT_CHARACTERISTIC(IDENTIFY, identify),
-            NULL
-        }),
-        HOMEKIT_SERVICE(MOTION_SENSOR, .primary=true, .characteristics=(homekit_characteristic_t*[]){
-            HOMEKIT_CHARACTERISTIC(NAME, "Motion Sensor"),
-            &motion_detected,
-            NULL
-        }),
-        NULL
-    }),
 
 homekit_server_config_t config = {
-    .accessories = accessories,
-    .password = "111-11-111"
+.accessories = accessories,
+.password = "123-45-678"
 };
 
-void user_init(void) {
-    uart_set_baud(0, 115200);
+void create_accessory_name() {
+uint8_t macaddr[6];
+sdk_wifi_get_macaddr(STATION_IF, macaddr);
 
-    wifi_init();
-    led_init();
-    homekit_server_init(&config);
+```
+char *name_value = malloc(14);
+snprintf(name_value, 14, "Homekit-%02X%02X%02X", macaddr[3], macaddr[4], macaddr[5]);
+
+name.value = HOMEKIT_STRING(name_value);
+serial.value = name.value;
+```
+}
+
+void on_wifi_ready() {
+create_accessory_name();
+}
+
+void user_init(void) {
+uart_set_baud(0, 115200);
+
+```
+wifi_config_init("ESP", NULL, on_wifi_ready);
+homekit_server_init(&config);
+gpio_init();
+```
 }
