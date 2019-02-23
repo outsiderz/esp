@@ -73,16 +73,17 @@ homekit_accessory_t *accessories[] = {
 HOMEKIT_ACCESSORY(
   .id=1,
   .category=homekit_accessory_category_switch,
-  .services=(homekit_service_t_[]){
-HOMEKIT_SERVICE(ACCESSORY_INFORMATION,
-  .characteristics=(homekit_characteristic_t*[]){
-&name,
-HOMEKIT_CHARACTERISTIC(MANUFACTURER, "ESP"),
-&serial,
-HOMEKIT_CHARACTERISTIC(MODEL, "ESP8266"),
-HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "ZERO"),
-HOMEKIT_CHARACTERISTIC(IDENTIFY, identify),
-NULL
+  .services=(homekit_service_t_[]) {
+    HOMEKIT_SERVICE(
+        ACCESSORY_INFORMATION,
+        .characteristics=(homekit_characteristic_t*[]) {
+            HOMEKIT_CHARACTERISTIC(NAME, "sensor"),
+            HOMEKIT_CHARACTERISTIC(MANUFACTURER, "Alex_Khmelenko"),
+            HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "0012345"),
+            HOMEKIT_CHARACTERISTIC(MODEL, "motion"),
+            HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.1"),
+            HOMEKIT_CHARACTERISTIC(IDENTIFY, identify),
+            NULL
 }),
 HOMEKIT_SERVICE(MOTION_SENSOR, .primary=true, .characteristics=(homekit_characteristic_t*[]){
 HOMEKIT_CHARACTERISTIC(NAME, "Motion Sensor"),
