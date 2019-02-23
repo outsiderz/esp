@@ -12,116 +12,105 @@
 #include <homekit/characteristics.h>
 #include <wifi_config.h>
 
-#define MOTION_SENSOR_GPIO 14
 
-#define DEBOUNCE_TIME 500 / portTICK_PERIOD_MS
-#define RESET_TIME 10000
+#include <task.h>
 
-static ETSTimer device_restart_timer;
 
-homekit_characteristic_t motion_detected = HOMEKIT_CHARACTERISTIC_(MOTION_DETECTED, 0);
+static void wifi_init() {
+    struct sdk_station_config wifi_config = {
+        .ssid = WIFI_SSID,
+        .password = WIFI_PASSWORD,
+    };
 
-void device_restart() {
-sdk_system_restart();
+    sdk_wifi_set_opmode(STATION_MODE);
+    sdk_wifi_station_set_config(&wifi_config);
+    sdk_wifi_station_connect();
 }
 
-void reset_call() {
-homekit_server_reset();
-wifi_config_reset();
+const int led_gpio = 2;
+bool led_on = false;
 
-sdk_os_timer_setfn (& device_restart_timer, device_restart, NULL);
-sdk_os_timer_arm(&device_restart_timer, 5500, 0);
-
+void led_write(bool on) {
+    gpio_write(led_gpio, on ? 0 : 1);
 }
 
-void motion_sensor_callback(uint8_t gpio) {
-
-
-if (gpio == MOTION_SENSOR_GPIO){
-    int new = 0;
-    new = gpio_read(MOTION_SENSOR_GPIO);
-    motion_detected.value = HOMEKIT_BOOL(new);
-    homekit_characteristic_notify(&motion_detected, HOMEKIT_BOOL(new));
-    printf("Motion Detected on %d\n", gpio);
-}
-else {
-    printf("Interrupt on %d", gpio);
+void led_init() {
+    gpio_enable(led_gpio, GPIO_OUTPUT);
+    led_write(led_on);
 }
 
+void led_identify_task(void *_args) {
+    for (int i=0; i<3; i++) {
+        for (int j=0; j<2; j++) {
+            led_write(true);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            led_write(false);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+        }
+
+        vTaskDelay(250 / portTICK_PERIOD_MS);
+    }
+
+    led_write(led_on);
+
+    vTaskDelete(NULL);
 }
 
-void gpio_init() {
-gpio_enable(MOTION_SENSOR_GPIO, GPIO_INPUT);
-gpio_set_pullup(MOTION_SENSOR_GPIO, true, true);
-gpio_set_interrupt(MOTION_SENSOR_GPIO, GPIO_INTTYPE_EDGE_ANY, motion_sensor_callback);
+void led_identify(homekit_value_t _value) {
+    printf("LED identify\n");
+    xTaskCreate(led_identify_task, "LED identify", 128, NULL, 2, NULL);
 }
 
-void identify_task(void *_args) {
-vTaskDelete(NULL);
+homekit_value_t led_on_get() {
+    return HOMEKIT_BOOL(led_on);
 }
 
-void identify(homekit_value_t _value) {
-printf("identify\n");
-xTaskCreate(identify_task, "identify", 128, NULL, 2, NULL);
+void led_on_set(homekit_value_t value) {
+    if (value.format != homekit_format_bool) {
+        printf("Invalid value format: %d\n", value.format);
+        return;
+    }
+
+    led_on = value.bool_value;
+    led_write(led_on);
 }
 
-homekit_characteristic_t name = HOMEKIT_CHARACTERISTIC_(NAME, "ESP8266");
-homekit_characteristic_t serial = HOMEKIT_CHARACTERISTIC_(SERIAL_NUMBER, "Sonoff N/A");
 
 homekit_accessory_t *accessories[] = {
-HOMEKIT_ACCESSORY(
-  .id=6,
-  .category=homekit_accessory_category_door_lock,
-        .services=(homekit_service_t*[]) {
-    HOMEKIT_SERVICE(
-        ACCESSORY_INFORMATION,
-        .characteristics=(homekit_characteristic_t*[]) {
-            HOMEKIT_CHARACTERISTIC(NAME, "sensor"),
-            HOMEKIT_CHARACTERISTIC(MANUFACTURER, "Alex_Khmelenko"),
-            HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "0012345"),
-            HOMEKIT_CHARACTERISTIC(MODEL, "motion"),
+    HOMEKIT_ACCESSORY(.id=6, .category=homekit_accessory_category_door_lock, .services=(homekit_service_t*[]){
+        HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics=(homekit_characteristic_t*[]){
+            HOMEKIT_CHARACTERISTIC(NAME, "Sample LED"),
+            HOMEKIT_CHARACTERISTIC(MANUFACTURER, "HaPK"),
+            HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "037A2BABF19D"),
+            HOMEKIT_CHARACTERISTIC(MODEL, "MyLED"),
             HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.1"),
-            HOMEKIT_CHARACTERISTIC(IDENTIFY, identify),
+            HOMEKIT_CHARACTERISTIC(IDENTIFY, led_identify),
             NULL
-}),
-HOMEKIT_SERVICE(LOCK_MANAGEMENT, .primary=true, .characteristics=(homekit_characteristic_t*[]){
-HOMEKIT_CHARACTERISTIC(LOCK_CONTROL_POINT, "1"),
-HOMEKIT_CHARACTERISTIC(VERSION, "lock"),
-&motion_detected,
-NULL
-}),
-NULL
-}),
-NULL
+        }),
+        HOMEKIT_SERVICE(LOCK_MANAGEMENT, .primary=true, .characteristics=(homekit_characteristic_t*[]){
+            HOMEKIT_CHARACTERISTIC(NAME, "Sample LED"),
+            HOMEKIT_CHARACTERISTIC(
+                ON, false,
+                .getter=led_on_get,
+                .setter=led_on_set
+            ),
+            NULL
+        }),
+        NULL
+    }),
+    NULL
 };
 
 homekit_server_config_t config = {
-.accessories = accessories,
-.password = "123-45-678"
+    .accessories = accessories,
+    .password = "111-11-111"
 };
 
-void create_accessory_name() {
-uint8_t macaddr[6];
-sdk_wifi_get_macaddr(STATION_IF, macaddr);
-
-
-char *name_value = malloc(14);
-snprintf(name_value, 14, "Homekit-%02X%02X%02X", macaddr[3], macaddr[4], macaddr[5]);
-
-name.value = HOMEKIT_STRING(name_value);
-serial.value = name.value;
-
-}
-
-void on_wifi_ready() {
-create_accessory_name();
-}
-
 void user_init(void) {
-uart_set_baud(0, 115200);
+    uart_set_baud(0, 115200);
 
 
-wifi_config_init("ESP", NULL, on_wifi_ready);
+wifi_config_init("lock", NULL, on_wifi_ready);
 homekit_server_init(&config);
 gpio_init();
 
