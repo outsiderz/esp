@@ -25,9 +25,7 @@ void device_restart() {
 sdk_system_restart();
 }
 
-void reset_call() {
-homekit_server_reset();
-wifi_config_reset();
+
 
 ```
 sdk_os_timer_setfn(&device_restart_timer, device_restart, NULL);
