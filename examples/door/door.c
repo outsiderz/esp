@@ -76,8 +76,6 @@ HOMEKIT_ACCESSORY(
     HOMEKIT_SERVICE(
         ACCESSORY_INFORMATION,
         .characteristics=(homekit_characteristic_t*[]) {
-          HOMEKIT_CHARACTERISTIC(LOCK_CONTROL_POINT, "1"),
-          HOMEKIT_CHARACTERISTIC(VERSION, "Alex_Khmelenko"),
             HOMEKIT_CHARACTERISTIC(NAME, "sensor"),
             HOMEKIT_CHARACTERISTIC(MANUFACTURER, "Alex_Khmelenko"),
             HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "0012345"),
@@ -86,8 +84,9 @@ HOMEKIT_ACCESSORY(
             HOMEKIT_CHARACTERISTIC(IDENTIFY, identify),
             NULL
 }),
-HOMEKIT_SERVICE(MOTION_SENSOR, .primary=true, .characteristics=(homekit_characteristic_t*[]){
-HOMEKIT_CHARACTERISTIC(NAME, "Motion Sensor"),
+HOMEKIT_SERVICE(LOCK_MANAGEMENT, .primary=true, .characteristics=(homekit_characteristic_t*[]){
+HOMEKIT_CHARACTERISTIC(LOCK_CONTROL_POINT, "1"),
+HOMEKIT_CHARACTERISTIC(VERSION, "lock"),
 &motion_detected,
 NULL
 }),
