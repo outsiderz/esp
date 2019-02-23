@@ -2,6 +2,8 @@ PROGRAM = led
 
 EXTRA_COMPONENTS = \
 	extras/http-parser \
+	extras/dhcpserver \
+	$(abspath ../../components/wifi_config) \
 	$(abspath ../../components/wolfssl) \
 	$(abspath ../../components/cJSON) \
 	$(abspath ../../components/homekit)
