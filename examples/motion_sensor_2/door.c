@@ -51,7 +51,7 @@ else {
 }
 
 void gpio_init() {
-gpio_enable(MOTION_SENSOR_GPIO, GPIO_INPUT);
+gpio_enable(MOTION_SENSOR_GPIO, GPIO_OUTPUT);
 gpio_set_pullup(MOTION_SENSOR_GPIO, true, true);
 gpio_set_interrupt(MOTION_SENSOR_GPIO, GPIO_INTTYPE_EDGE_ANY, motion_sensor_callback);
 }
@@ -79,7 +79,7 @@ HOMEKIT_ACCESSORY(
             HOMEKIT_CHARACTERISTIC(NAME, "motion sensor"),
             HOMEKIT_CHARACTERISTIC(MANUFACTURER, "Alex_Khmelenko"),
             HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "344000"),
-            HOMEKIT_CHARACTERISTIC(MODEL, "motion_unput"),
+            HOMEKIT_CHARACTERISTIC(MODEL, "motion_output"),
             HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.1"),
             HOMEKIT_CHARACTERISTIC(IDENTIFY, identify),
             NULL
