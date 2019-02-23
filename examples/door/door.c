@@ -73,7 +73,7 @@ homekit_accessory_t *accessories[] = {
 HOMEKIT_ACCESSORY(
   .id=1,
   .category=homekit_accessory_category_switch,
-  .services=(homekit_service_t_[]) {
+        .services=(homekit_service_t*[]) {
     HOMEKIT_SERVICE(
         ACCESSORY_INFORMATION,
         .characteristics=(homekit_characteristic_t*[]) {
