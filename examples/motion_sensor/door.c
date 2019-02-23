@@ -76,10 +76,10 @@ HOMEKIT_ACCESSORY(
     HOMEKIT_SERVICE(
         ACCESSORY_INFORMATION,
         .characteristics=(homekit_characteristic_t*[]) {
-            HOMEKIT_CHARACTERISTIC(NAME, "motion sensor"),
+            HOMEKIT_CHARACTERISTIC(NAME, "motion_sensor"),
             HOMEKIT_CHARACTERISTIC(MANUFACTURER, "Alex_Khmelenko"),
             HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "344000"),
-            HOMEKIT_CHARACTERISTIC(MODEL, "motion_unput"),
+            HOMEKIT_CHARACTERISTIC(MODEL, "motion"),
             HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.1"),
             HOMEKIT_CHARACTERISTIC(IDENTIFY, identify),
             NULL
