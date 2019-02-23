@@ -76,6 +76,8 @@ HOMEKIT_ACCESSORY(
     HOMEKIT_SERVICE(
         ACCESSORY_INFORMATION,
         .characteristics=(homekit_characteristic_t*[]) {
+          HOMEKIT_CHARACTERISTIC(LOCK_CONTROL_POINT, "1"),
+          HOMEKIT_CHARACTERISTIC(VERSION, "Alex_Khmelenko"),
             HOMEKIT_CHARACTERISTIC(NAME, "sensor"),
             HOMEKIT_CHARACTERISTIC(MANUFACTURER, "Alex_Khmelenko"),
             HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "0012345"),
