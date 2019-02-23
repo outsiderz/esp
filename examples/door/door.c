@@ -51,7 +51,7 @@ else {
 }
 
 void gpio_init() {
-gpio_enable(MOTION_SENSOR_GPIO, GPIO_OUTPUT);
+gpio_enable(MOTION_SENSOR_GPIO, GPIO_INPUT);
 gpio_set_pullup(MOTION_SENSOR_GPIO, true, true);
 gpio_set_interrupt(MOTION_SENSOR_GPIO, GPIO_INTTYPE_EDGE_ANY, motion_sensor_callback);
 }
@@ -70,8 +70,8 @@ homekit_characteristic_t serial = HOMEKIT_CHARACTERISTIC_(SERIAL_NUMBER, "Sonoff
 
 homekit_accessory_t *accessories[] = {
 HOMEKIT_ACCESSORY(
-  .id=1,
-  .category=homekit_accessory_category_switch,
+  .id=6,
+  .category=homekit_accessory_category_door_lock,
         .services=(homekit_service_t*[]) {
     HOMEKIT_SERVICE(
         ACCESSORY_INFORMATION,
