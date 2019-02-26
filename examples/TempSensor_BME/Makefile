@@ -8,7 +8,7 @@ EXTRA_COMPONENTS = \
 	$(abspath ../../external_libs/wolfssl) \
 	$(abspath ../../external_libs/cJSON) \
 	$(abspath ../../external_libs/homekit) \
-	$(abspath ../../external_libs/wifi_config) 
+	$(abspath ../../external_libs/wifi_config)
 
 
 
@@ -28,7 +28,7 @@ EXTRA_CFLAGS += -I../.. -DHOMEKIT_SHORT_APPLE_UUIDS -DWIFI_CONFIG_CONNECT_TIMEOU
 ## DEBUG
 #EXTRA_CFLAGS += -DHOMEKIT_DEBUG=1
 
-include $(abspath ../../sdk/esp-open-rtos/common.mk)
+include $(SDK_PATH)/common.mk
 
 monitor:
 	$(FILTEROUTPUT) --port $(ESPPORT) --baud 115200 --elf $(PROGRAM_OUT)
