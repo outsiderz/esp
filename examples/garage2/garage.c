@@ -63,7 +63,7 @@ void identify(homekit_value_t _value);
 // Declare global variables:
 
 homekit_accessory_t *accessories[] = {
-    HOMEKIT_ACCESSORY(.id=1, .category=homekit_accessory_category_garage, .services=(homekit_service_t*[]){
+    HOMEKIT_ACCESSORY(.id=6, .category=homekit_accessory_category_door_lock, .services=(homekit_service_t*[]){
         HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics=(homekit_characteristic_t*[]){
             HOMEKIT_CHARACTERISTIC(NAME, "Garagentor"),
             HOMEKIT_CHARACTERISTIC(MANUFACTURER, "ObjP"),
@@ -218,7 +218,7 @@ homekit_value_t gdo_target_state_get() {
     if (result == HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_OPENING) {
 	result = HOMEKIT_CHARACTERISTIC_TARGET_DOOR_STATE_OPEN;
     } else if (result == HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_CLOSING) {
-        result = HOMEKIT_CHARACTERISTIC_TARGET_DOOR_STATE_CLOSED;  
+        result = HOMEKIT_CHARACTERISTIC_TARGET_DOOR_STATE_CLOSED;
     }
 
     printf("Returning target door state '%s'.\n", state_description(result));
