@@ -247,7 +247,7 @@ homekit_accessory_t *accessories[] = {
             .characteristics=(homekit_characteristic_t*[]){
                 HOMEKIT_CHARACTERISTIC(NAME, "Sonoff Dimmer"),
                 &lightbulb_on,
-                HOMEKIT_CHARACTERISTIC(BRIGHTNESS, 100, .getter=light_bri_get, .setter=light_bri_set),
+                HOMEKIT_CHARACTERISTIC(ROTATION_SPEED, 100, .getter=light_bri_get, .setter=light_bri_set),
             NULL
         }),
         NULL
