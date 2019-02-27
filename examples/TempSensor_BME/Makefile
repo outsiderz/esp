@@ -5,10 +5,10 @@ EXTRA_COMPONENTS = \
 	extras/http-parser \
 	extras/dhcpserver \
 	extras/i2c \
-	$(abspath ../../external_libs/wolfssl) \
-	$(abspath ../../external_libs/cJSON) \
-	$(abspath ../../external_libs/homekit) \
-	$(abspath ../../external_libs/wifi_config)
+	$(abspath ../../components/wolfssl) \
+	$(abspath ../../components/cJSON) \
+	$(abspath ../../components/homekit) \
+	$(abspath ../../components/wifi_config)
 
 
 
