@@ -89,16 +89,6 @@ void reset_configuration() {
 }
 
 
-static void wifi_init() {
-    struct sdk_station_config wifi_config = {
-        .ssid = WIFI_SSID,
-        .password = WIFI_PASSWORD,
-    };
-    sdk_wifi_set_opmode(STATION_MODE);
-    sdk_wifi_station_set_config(&wifi_config);
-    sdk_wifi_station_connect();
-}
-
 
 void gpio_init() {
 //    gpio_enable(relay_gpio, GPIO_OUTPUT);
