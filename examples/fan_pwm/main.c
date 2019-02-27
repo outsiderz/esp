@@ -78,7 +78,7 @@ void reset_configuration_task() {
     printf("Resetting HomeKit Config\n");
     homekit_server_reset();
     vTaskDelay(1000 / portTICK_PERIOD_MS);
-     
+
     printf("Restarting\n");
     sdk_system_restart();
     vTaskDelete(NULL);
@@ -243,7 +243,7 @@ homekit_accessory_t *accessories[] = {
                 HOMEKIT_CHARACTERISTIC(IDENTIFY, light_identify),
                 NULL
             }),
-        HOMEKIT_SERVICE(LIGHTBULB, .primary=true,
+        HOMEKIT_SERVICE(SWITCH, .primary=true,
             .characteristics=(homekit_characteristic_t*[]){
                 HOMEKIT_CHARACTERISTIC(NAME, "Sonoff Dimmer"),
                 &lightbulb_on,
@@ -269,13 +269,13 @@ void on_wifi_ready() {
 void create_accessory_name() {
     uint8_t macaddr[6];
     sdk_wifi_get_macaddr(STATION_IF, macaddr);
-    
+
     int name_len = snprintf(NULL, 0, "Sonoff Dimmer %02X:%02X:%02X",
             macaddr[3], macaddr[4], macaddr[5]);
     char *name_value = malloc(name_len+1);
     snprintf(name_value, name_len+1, "Sonoff Dimmer %02X:%02X:%02X",
             macaddr[3], macaddr[4], macaddr[5]);
-    
+
     name.value = HOMEKIT_STRING(name_value);
 }
 
@@ -289,7 +289,7 @@ void user_init(void) {
     homekit_server_init(&config);                                  //testing
  */
     wifi_config_init("Sonoff Dimmer", NULL, on_wifi_ready);        //release
-    
+
     gpio_init();
     light_init();
 
