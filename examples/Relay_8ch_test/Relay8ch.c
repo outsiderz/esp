@@ -261,6 +261,21 @@ void init_accessory() {
     accessories[0] = NEW_HOMEKIT_ACCESSORY(.category=homekit_accessory_category_other, .services=services);
     accessories[1] = NULL;
 }
+
+void create_accessory_name() {
+    uint8_t macaddr[6];
+    sdk_wifi_get_macaddr(STATION_IF, macaddr);
+    
+    int name_len = snprintf(NULL, 0, "Sonoff Switch-%02X%02X%02X",
+                            macaddr[3], macaddr[4], macaddr[5]);
+    char *name_value = malloc(name_len+1);
+    snprintf(name_value, name_len+1, "Sonoff Switch-%02X%02X%02X",
+             macaddr[3], macaddr[4], macaddr[5]);
+    
+    name.value = HOMEKIT_STRING(name_value);
+}
+
+
 homekit_server_config_t config = {
     .accessories = accessories,
     .password = "111-11-111"
