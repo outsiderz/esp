@@ -230,7 +230,7 @@ void init_accessory() {
     homekit_service_t** s = services;
 
     *(s++) = NEW_HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics=(homekit_characteristic_t*[]) {
-        NEW_HOMEKIT_CHARACTERISTIC(NAME, name_value),
+        NEW_HOMEKIT_CHARACTERISTIC(NAME, "alex"),
         NEW_HOMEKIT_CHARACTERISTIC(MANUFACTURER, "HaPK"),
         NEW_HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "0"),
         NEW_HOMEKIT_CHARACTERISTIC(MODEL, "Relays"),
