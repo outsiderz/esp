@@ -10,6 +10,7 @@
 #include <homekit/characteristics.h>
 #include <wifi_config.h>
 
+#define MAX_SERVICES 20
 
 
 const int relay1 = 2;
@@ -215,94 +216,51 @@ void relay8_on_set(homekit_value_t value) {
     led_write8(relay8_on);
 }
 
-homekit_accessory_t *accessories[] = {
-    HOMEKIT_ACCESSORY(.id=1, .category=homekit_accessory_category_switch, .services=(homekit_service_t*[]){
-        HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics=(homekit_characteristic_t*[]){
-        HOMEKIT_CHARACTERISTIC(NAME, "Relay_8CH"),
-            HOMEKIT_CHARACTERISTIC(MANUFACTURER, "Alex_Khmelenko"),
-            HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "037A2BABF19D"),
-            HOMEKIT_CHARACTERISTIC(MODEL, "Relay_8CH"),
-            HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "v1"),
-            HOMEKIT_CHARACTERISTIC(IDENTIFY, led_identify),
-            NULL
-        }),
-        HOMEKIT_SERVICE(SWITCH, .primary=true, .characteristics=(homekit_characteristic_t*[]){
-            HOMEKIT_CHARACTERISTIC(NAME, "Relay1"),
-            HOMEKIT_CHARACTERISTIC(
-                ON, false,
-                .getter=relay1_on_get,
-                .setter=relay1_on_set
-            ),
-            NULL
-        }),
-                HOMEKIT_SERVICE(SWITCH, .primary=true, .characteristics=(homekit_characteristic_t*[]){
-            HOMEKIT_CHARACTERISTIC(NAME, "Relay2"),
-            HOMEKIT_CHARACTERISTIC(
-                ON, false,
-                .getter=relay2_on_get,
-                .setter=relay2_on_set
-            ),
-            NULL
-        }),
-                   HOMEKIT_SERVICE(SWITCH, .primary=true, .characteristics=(homekit_characteristic_t*[]){
-            HOMEKIT_CHARACTERISTIC(NAME, "Relay3"),
-            HOMEKIT_CHARACTERISTIC(
-                ON, false,
-                .getter=relay3_on_get,
-                .setter=relay3_on_set
-            ),
-            NULL
-        }),
-                   HOMEKIT_SERVICE(SWITCH, .primary=true, .characteristics=(homekit_characteristic_t*[]){
-            HOMEKIT_CHARACTERISTIC(NAME, "Relay4"),
-            HOMEKIT_CHARACTERISTIC(
-                ON, false,
-                .getter=relay4_on_get,
-                .setter=relay4_on_set
-            ),
-            NULL
-        }),
-        HOMEKIT_SERVICE(SWITCH, .primary=true, .characteristics=(homekit_characteristic_t*[]){
- HOMEKIT_CHARACTERISTIC(NAME, "Relay5"),
- HOMEKIT_CHARACTERISTIC(
-     ON, false,
-     .getter=relay5_on_get,
-     .setter=relay5_on_set
- ),
- NULL
-}),
-      HOMEKIT_SERVICE(SWITCH, .primary=true, .characteristics=(homekit_characteristic_t*[]){
- HOMEKIT_CHARACTERISTIC(NAME, "Relay6"),
- HOMEKIT_CHARACTERISTIC(
-     ON, false,
-     .getter=relay6_on_get,
-     .setter=relay6_on_set
- ),
- NULL
-}),
-             HOMEKIT_SERVICE(SWITCH, .primary=true, .characteristics=(homekit_characteristic_t*[]){
- HOMEKIT_CHARACTERISTIC(NAME, "Relay7"),
- HOMEKIT_CHARACTERISTIC(
-     ON, false,
-     .getter=relay7_on_get,
-     .setter=relay7_on_set
- ),
- NULL
-}),
-HOMEKIT_SERVICE(SWITCH, .primary=true, .characteristics=(homekit_characteristic_t*[]){
-HOMEKIT_CHARACTERISTIC(NAME, "Relay8"),
-HOMEKIT_CHARACTERISTIC(
-ON, false,
-.getter=relay8_on_get,
-.setter=relay8_on_set
-),
-NULL
-}),
-NULL
-}),
-NULL
-};
+void init_accessory() {
+    uint8_t macaddr[6];
+    sdk_wifi_get_macaddr(STATION_IF, macaddr);
 
+    int name_len = snprintf(NULL, 0, "Relays-%02X%02X%02X",
+                            macaddr[3], macaddr[4], macaddr[5]);
+    char *name_value = malloc(name_len+1);
+    snprintf(name_value, name_len+1, "Relays-%02X%02X%02X",
+             macaddr[3], macaddr[4], macaddr[5]);
+
+    homekit_service_t* services[MAX_SERVICES + 8];
+    homekit_service_t** s = services;
+
+    *(s++) = NEW_HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics=(homekit_characteristic_t*[]) {
+        NEW_HOMEKIT_CHARACTERISTIC(NAME, name_value),
+        NEW_HOMEKIT_CHARACTERISTIC(MANUFACTURER, "HaPK"),
+        NEW_HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "0"),
+        NEW_HOMEKIT_CHARACTERISTIC(MODEL, "Relays"),
+        NEW_HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.1"),
+        NEW_HOMEKIT_CHARACTERISTIC(IDENTIFY, lamp_identify),
+        NULL
+    });
+
+    for (int i=0; i < relay_count; i++) {
+        int relay_name_len = snprintf(NULL, 0, "Relay %d", i + 1);
+        char *relay_name_value = malloc(relay_name_len+1);
+        snprintf(relay_name_value, relay_name_len+1, "Relay %d", i + 1);
+
+        *(s++) = NEW_HOMEKIT_SERVICE(LIGHTBULB, .characteristics=(homekit_characteristic_t*[]) {
+            NEW_HOMEKIT_CHARACTERISTIC(NAME, relay_name_value),
+            NEW_HOMEKIT_CHARACTERISTIC(
+                ON, true,
+                .callback=HOMEKIT_CHARACTERISTIC_CALLBACK(
+                    relay_callback, .context=(void*)&relay_gpios[i]
+                ),
+            ),
+            NULL
+        });
+    }
+
+    *(s++) = NULL;
+
+    accessories[0] = NEW_HOMEKIT_ACCESSORY(.category=homekit_accessory_category_other, .services=services);
+    accessories[1] = NULL;
+}
 homekit_server_config_t config = {
     .accessories = accessories,
     .password = "111-11-111"
